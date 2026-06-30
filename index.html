@@ -332,6 +332,142 @@ h1 {
   border-bottom: 0;
   padding-bottom: 0;
 }
+.mobile-tx-list {
+  display: none;
+  gap: 10px;
+}
+.tx-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: grid;
+  gap: 7px;
+}
+.tx-card-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+.tx-date {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 750;
+}
+.tx-desc {
+  color: var(--ink);
+  font-weight: 750;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.tx-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.tx-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  max-width: 100%;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.utility-mobile-panel {
+  display: none;
+  gap: 10px;
+}
+.utility-month-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+.utility-month-card.marker {
+  border-left: 4px solid var(--violet);
+  background: linear-gradient(90deg, var(--violet-soft), #fff 55%);
+}
+.utility-month-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+}
+.utility-month-name {
+  font-weight: 800;
+}
+.utility-total {
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.utility-bar {
+  height: 9px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-2);
+}
+.utility-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--amber), var(--teal), var(--blue));
+}
+.utility-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.utility-parts span {
+  display: inline-flex;
+  min-height: 22px;
+  align-items: center;
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+body.phone-layout {
+  overflow-x: hidden;
+}
+body.phone-layout .layout,
+body.phone-layout .main,
+body.phone-layout .section,
+body.phone-layout .panel,
+body.phone-layout .grid {
+  max-width: 100%;
+  min-width: 0;
+}
+body.phone-layout #utilityMetrics {
+  grid-template-columns: 1fr !important;
+}
+body.phone-layout #utilities .grid.two,
+body.phone-layout #utilities .utility-table-panel {
+  display: none !important;
+}
+body.phone-layout #utilityMobile {
+  display: grid !important;
+}
+body.phone-layout #transactions .table-shell {
+  display: none !important;
+}
+body.phone-layout #transactions .mobile-tx-list {
+  display: grid !important;
+}
+body.phone-layout #transactions .panel,
+body.phone-layout #transactionCards {
+  overflow: hidden;
+}
 .item-name {
   font-weight: 750;
 }
@@ -711,6 +847,12 @@ tr.marker td {
   .table-shell {
     -webkit-overflow-scrolling: touch;
   }
+  #transactions .table-shell {
+    display: none;
+  }
+  #transactions .mobile-tx-list {
+    display: grid;
+  }
   table {
     min-width: 680px;
   }
@@ -745,6 +887,9 @@ tr.marker td {
   .grid.metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px;
+  }
+  #utilityMetrics {
+    grid-template-columns: 1fr;
   }
   .metric {
     min-height: 104px;
@@ -938,6 +1083,7 @@ tr.marker td {
           </div>
         </div>
         <div class="grid metrics" id="utilityMetrics"></div>
+        <div class="utility-mobile-panel" id="utilityMobile"></div>
         <div class="grid two">
           <div class="panel">
             <div class="panel-title"><h2>Stacked Monthly Utility Cost</h2><span class="hint">PSEG + gas + water</span></div>
@@ -949,7 +1095,7 @@ tr.marker td {
             <div class="chart-box" id="utilityTotalChart"></div>
           </div>
         </div>
-        <div class="panel">
+        <div class="panel utility-table-panel">
           <div class="panel-title"><h2>Month By Month</h2><span class="hint">monthly water equivalent</span></div>
           <div class="table-shell">
             <table>
@@ -982,7 +1128,7 @@ tr.marker td {
         <div class="section-head">
           <div>
             <h2 class="section-title">Transaction explorer</h2>
-            <p class="section-kicker">Search across description, category, account, and amount. The table renders in chunks to keep the page quick.</p>
+            <p class="section-kicker">Search across description, category, account, and amount. Results render in chunks to keep the page quick.</p>
           </div>
         </div>
         <div class="panel">
@@ -1006,6 +1152,7 @@ tr.marker td {
               <tbody id="transactionTable"></tbody>
             </table>
           </div>
+          <div class="mobile-tx-list" id="transactionCards"></div>
         </div>
       </section>
     </main>
@@ -1044,6 +1191,11 @@ tr.marker td {
 
   function $(selector) {
     return document.querySelector(selector);
+  }
+
+  function applyPhoneMode() {
+    const phone = window.matchMedia && window.matchMedia("(max-width: 600px)").matches;
+    document.body.classList.toggle("phone-layout", !!phone);
   }
 
   function $all(selector) {
@@ -1495,6 +1647,7 @@ tr.marker td {
       metric("Water Avg", fmt(waterAvg), "monthly equivalent", "good"),
       metric("Move-In Month", UTILITY.months[UTILITY.parentsIdx], "parents moved in", "warn"),
     ].join("");
+    renderUtilityMobileCards();
     drawStackedBars("utilityStackedChart", UTILITY.months, [
       { name: "PSEG", values: UTILITY.pseg, color: colors.amber },
       { name: "National Grid", values: UTILITY.ng, color: colors.teal },
@@ -1516,6 +1669,32 @@ tr.marker td {
         '<td class="num">' + fmt2(UTILITY.water[i]) + '</td>' +
         '<td class="num"><strong>' + fmt2(UTILITY.totals[i]) + '</strong></td>' +
         '</tr>';
+    }).join("");
+  }
+
+  function renderUtilityMobileCards() {
+    const el = document.getElementById("utilityMobile");
+    if (!el) return;
+    const maxTotal = Math.max.apply(null, UTILITY.totals.concat([1]));
+    el.innerHTML = UTILITY.months.map(function (m, i) {
+      const pseg = UTILITY.pseg[i];
+      const ng = UTILITY.ng[i];
+      const water = UTILITY.water[i];
+      const total = UTILITY.totals[i] || 0;
+      const width = Math.max(2, total / maxTotal * 100);
+      return '<article class="utility-month-card' + (i === UTILITY.parentsIdx ? ' marker' : '') + '">' +
+        '<div class="utility-month-top">' +
+        '<div><div class="utility-month-name">' + escapeHtml(m) + '</div>' +
+        '<div class="item-meta">' + (i === UTILITY.parentsIdx ? 'Parents moved in' : 'Combined utility total') + '</div></div>' +
+        '<div class="utility-total">' + fmt2(total) + '</div>' +
+        '</div>' +
+        '<div class="utility-bar"><span style="width:' + width.toFixed(1) + '%"></span></div>' +
+        '<div class="utility-parts">' +
+        '<span>PSEG ' + (pseg == null ? '-' : fmt2(pseg)) + '</span>' +
+        '<span>Gas ' + fmt2(ng) + '</span>' +
+        '<span>Water ' + fmt2(water) + '</span>' +
+        '</div>' +
+        '</article>';
     }).join("");
   }
 
@@ -1580,6 +1759,22 @@ tr.marker td {
         '<td class="num ' + cls + '">' + fmt2(amt) + '</td>' +
         '</tr>';
     }).join("");
+    const cardEl = document.getElementById("transactionCards");
+    if (cardEl) {
+      cardEl.innerHTML = shown.map(function (t) {
+        const amt = Number(t.amount) || 0;
+        const cls = amt < 0 ? "bad-text" : "good-text";
+        return '<article class="tx-card">' +
+          '<div class="tx-card-top"><span class="tx-date">' + escapeHtml(shortDate(t.date)) + '</span>' +
+          '<span class="amount ' + cls + '">' + fmt2(amt) + '</span></div>' +
+          '<div class="tx-desc">' + escapeHtml(t.description || "") + '</div>' +
+          '<div class="tx-meta">' +
+          '<span class="tx-chip">' + escapeHtml(t.category || "Uncategorized") + '</span>' +
+          '<span class="tx-chip">' + escapeHtml(t.account || "Unknown account") + '</span>' +
+          '</div>' +
+          '</article>';
+      }).join("");
+    }
   }
 
   function renderLegend(id, items) {
@@ -1801,8 +1996,10 @@ tr.marker td {
     let content = axisGrid(min, max, plot, options.yFormat) + xLabels(labels, plot, height);
     if (options.markerIndex != null) {
       const mx = plot.x + options.markerIndex * groupW + groupW / 2;
+      const markerLabel = isPhoneCanvas() ? "Move-in" : "Parents moved in";
+      const markerLabelX = isPhoneCanvas() ? Math.min(mx + 6, plot.x + plot.w - 58) : mx + 6;
       content += '<line x1="' + mx.toFixed(1) + '" x2="' + mx.toFixed(1) + '" y1="' + plot.y + '" y2="' + (plot.y + plot.h) + '" stroke="#7c3aed" stroke-width="2" stroke-dasharray="5 5"></line>';
-      content += '<text class="chart-label" x="' + (mx + 6).toFixed(1) + '" y="' + (plot.y + 16) + '">Parents moved in</text>';
+      content += '<text class="chart-label" x="' + markerLabelX.toFixed(1) + '" y="' + (plot.y + 16) + '">' + markerLabel + '</text>';
     }
     labels.forEach(function (_label, i) {
       let running = 0;
@@ -1819,6 +2016,8 @@ tr.marker td {
   }
 
   function init() {
+    applyPhoneMode();
+    window.addEventListener("resize", applyPhoneMode);
     bindNavigation();
     setMeta();
     renderSideSummary();
