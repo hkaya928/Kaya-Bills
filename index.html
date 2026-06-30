@@ -695,17 +695,18 @@ tr.marker td {
   }
   .chart-box {
     min-height: 228px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    overflow: hidden;
   }
   .chart-box.short {
     min-height: 210px;
   }
   .chart-box svg {
-    min-width: 760px;
+    min-width: 100%;
+    max-width: 100%;
+    width: 100%;
   }
   .chart-box.short svg {
-    min-width: 680px;
+    min-width: 100%;
   }
   .table-shell {
     -webkit-overflow-scrolling: touch;
@@ -725,6 +726,37 @@ tr.marker td {
   }
   .metric-value {
     font-size: 24px;
+  }
+}
+@media (min-width: 421px) and (max-width: 480px) {
+  .topbar-inner {
+    padding: 12px 16px 0;
+  }
+  .mobile-nav {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .layout {
+    padding: 14px;
+  }
+  .grid.metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .metric {
+    min-height: 104px;
+  }
+  .metric-value {
+    font-size: 22px;
+  }
+  .section-title {
+    max-width: 34ch;
+  }
+  .section-kicker {
+    max-width: 44ch;
   }
 }
 @media (max-width: 420px) {
@@ -1570,6 +1602,17 @@ tr.marker td {
     return '<svg viewBox="0 0 ' + width + ' ' + height + '" role="img" aria-hidden="true">' + content + '</svg>';
   }
 
+  function isPhoneCanvas() {
+    return window.matchMedia && window.matchMedia("(max-width: 480px)").matches;
+  }
+
+  function chartFrame() {
+    if (isPhoneCanvas()) {
+      return { width: 390, height: 238, plot: { x: 46, y: 18, w: 324, h: 168 } };
+    }
+    return { width: 980, height: 310, plot: { x: 64, y: 26, w: 890, h: 226 } };
+  }
+
   function niceMax(max) {
     if (!Number.isFinite(max) || max <= 0) return 1;
     const pow = Math.pow(10, Math.floor(Math.log10(max)));
@@ -1580,7 +1623,7 @@ tr.marker td {
 
   function axisGrid(min, max, plot, yFormat) {
     const lines = [];
-    const ticks = 4;
+    const ticks = isPhoneCanvas() ? 3 : 4;
     for (let i = 0; i <= ticks; i += 1) {
       const value = min + (max - min) * (i / ticks);
       const y = plot.y + plot.h - (value - min) / (max - min || 1) * plot.h;
@@ -1592,7 +1635,7 @@ tr.marker td {
 
   function xLabels(labels, plot, height) {
     const lines = [];
-    const maxLabels = labels.length > 14 ? 8 : labels.length;
+    const maxLabels = isPhoneCanvas() ? (labels.length > 8 ? 4 : labels.length) : (labels.length > 14 ? 8 : labels.length);
     const step = Math.max(1, Math.ceil(labels.length / maxLabels));
     labels.forEach(function (label, i) {
       if (i % step !== 0 && i !== labels.length - 1) return;
@@ -1604,9 +1647,10 @@ tr.marker td {
 
   function drawLineChart(id, labels, series, options) {
     options = options || {};
-    const width = 980;
-    const height = 310;
-    const plot = { x: 64, y: 26, w: 890, h: 226 };
+    const frame = chartFrame();
+    const width = frame.width;
+    const height = frame.height;
+    const plot = frame.plot;
     const vals = series.flatMap(function (s) { return s.values; }).filter(function (v) { return Number.isFinite(Number(v)); }).map(Number);
     const rawMin = options.minZero ? 0 : Math.min(0, Math.min.apply(null, vals));
     const min = rawMin < 0 ? rawMin : 0;
@@ -1640,9 +1684,10 @@ tr.marker td {
 
   function drawTimeLines(id, series, options) {
     options = options || {};
-    const width = 980;
-    const height = 310;
-    const plot = { x: 64, y: 26, w: 890, h: 226 };
+    const frame = chartFrame();
+    const width = frame.width;
+    const height = frame.height;
+    const plot = frame.plot;
     const allPoints = series.flatMap(function (s) { return s.points || []; }).filter(function (p) { return p.x && Number.isFinite(Number(p.y)); });
     if (!allPoints.length) {
       document.getElementById(id).innerHTML = '<div class="small-note">No trend data available.</div>';
@@ -1680,9 +1725,10 @@ tr.marker td {
 
   function drawGroupedBars(id, labels, series, options) {
     options = options || {};
-    const width = 980;
-    const height = 310;
-    const plot = { x: 64, y: 26, w: 890, h: 226 };
+    const frame = chartFrame();
+    const width = frame.width;
+    const height = frame.height;
+    const plot = frame.plot;
     const vals = series.flatMap(function (s) { return s.values || []; }).filter(function (v) { return Number.isFinite(Number(v)); }).map(Number);
     const min = 0;
     const max = niceMax(Math.max.apply(null, vals.concat([1])));
@@ -1712,9 +1758,10 @@ tr.marker td {
 
   function drawDivergingBars(id, labels, values, options) {
     options = options || {};
-    const width = 980;
-    const height = 310;
-    const plot = { x: 64, y: 26, w: 890, h: 226 };
+    const frame = chartFrame();
+    const width = frame.width;
+    const height = frame.height;
+    const plot = frame.plot;
     const min = Math.min.apply(null, values.concat([0]));
     const max = Math.max.apply(null, values.concat([0]));
     const span = Math.max(Math.abs(min), Math.abs(max), 1);
@@ -1737,9 +1784,10 @@ tr.marker td {
 
   function drawStackedBars(id, labels, series, options) {
     options = options || {};
-    const width = 980;
-    const height = 310;
-    const plot = { x: 64, y: 26, w: 890, h: 226 };
+    const frame = chartFrame();
+    const width = frame.width;
+    const height = frame.height;
+    const plot = frame.plot;
     const totalsByIndex = labels.map(function (_label, i) {
       return series.reduce(function (acc, s) { return acc + (Number(s.values[i]) || 0); }, 0);
     });
